@@ -1,4 +1,4 @@
-# MusicApp
+# Music-Catalogue
 As an avid listener of music, one of my biggest pain points is keeping track of what I listen to. For example, I often find myself forgetting about the tribute album to "Yellow Loveless" because, outside of owning a physical copy (which I don't), it only exists in the form of a video on YouTube. Other records exists in some streaming platforms but not others, some music is even unreleased and you'd only know about it if you happen to catch it live. The main point here is that I really want a place where I can catalogue everything I listen to and be able to reference back to it. This repository is my attempt to achieve that.
 
 The work here is very much a WIP, with more features and refinement coming.
