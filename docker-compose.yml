@@ -1,0 +1,29 @@
+services:
+  caddy:
+    image: caddy:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - frontend-dist:/srv/frontend
+    depends_on:
+      - frontend-builder
+      - backend
+
+  frontend-builder:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - frontend-dist:/app/dist
+    command: sh -c "npm ci && npm run build"
+
+  backend:
+    build: ./backend
+    env_file: .env
+
+volumes:
+  caddy_data:
+  frontend-dist:

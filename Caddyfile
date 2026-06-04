@@ -1,0 +1,21 @@
+http://localhost:80 {
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Cross-Origin-Opener-Policy "same-origin"
+        Cross-Origin-Embedder-Policy "require-corp"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' https://archive.org https://*.archive.org; style-src 'self' 'unsafe-inline'"
+    }
+
+    root * /srv/frontend
+
+    handle /api/* {
+        reverse_proxy backend:8080
+    }
+
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
+}
