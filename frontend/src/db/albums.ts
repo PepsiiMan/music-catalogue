@@ -39,9 +39,27 @@ export async function getAlbums(filters: AlbumFilters = {}): Promise<Album[]> {
   const order = filters.order === 'asc' ? 'ASC' : 'DESC'
   const orderClause = `ORDER BY ${sortBy} ${order}`
 
-  const sql = `SELECT id, title, artist, release, mbid FROM albums ${where} ${orderClause}`
+  const limitClause = filters.limit ? 'LIMIT ?' : ''
+  if (filters.limit) params.push(filters.limit)
+
+  const sql = `SELECT id, title, artist, release, mbid FROM albums ${where} ${orderClause} ${limitClause}`.trim()
   const result = await db.execWithParams(sql, params)
   return result.rows.map((row) => rowToAlbum(row, result.columns))
+}
+
+export async function getAlbumCount(): Promise<number> {
+  const db = await getDb()
+  const result = await db.execWithParams('SELECT COUNT(*) FROM albums')
+  return Number(result.rows[0][0])
+}
+
+export async function getRandomAlbum(): Promise<Album | undefined> {
+  const db = await getDb()
+  const result = await db.execWithParams(
+    'SELECT id, title, artist, release, mbid FROM albums ORDER BY RANDOM() LIMIT 1',
+  )
+  if (!result.rows.length) return undefined
+  return rowToAlbum(result.rows[0], result.columns)
 }
 
 export async function getAlbum(id: number): Promise<Album | undefined> {
