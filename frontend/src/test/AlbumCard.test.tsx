@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { AlbumCard } from "../components/AlbumCard"
 import type { Album } from "../types"
@@ -8,6 +8,11 @@ const mockGetCoverArt = vi.fn()
 
 vi.mock("../api/search", () => ({
   getCoverArt: (...args: unknown[]) => mockGetCoverArt(...args),
+}))
+
+vi.mock("motion/react", () => ({
+  motion: { div: "div" },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
 function Wrapper({ children }: { children: React.ReactNode }) {
@@ -23,6 +28,14 @@ const baseAlbum: Album = {
   artist: "Test Artist",
   release: "2024",
   mbid: null,
+}
+
+const albumWithMbid: Album = {
+  id: 2,
+  title: "Cover Album",
+  artist: "Cover Artist",
+  release: "2023",
+  mbid: "test-mbid",
 }
 
 describe("AlbumCard", () => {
@@ -72,5 +85,31 @@ describe("AlbumCard", () => {
     expect(card.className).toContain("hover:-translate-y-0.5")
     expect(card.className).toContain("hover:shadow-lg")
     expect(card.className).toContain("transition-all")
+  })
+
+  it("renders title, artist, and release", () => {
+    render(<AlbumCard album={baseAlbum} onDelete={vi.fn()} />, { wrapper: Wrapper })
+
+    expect(screen.getByText("Test Album")).toBeInTheDocument()
+    expect(screen.getByText("Test Artist")).toBeInTheDocument()
+    expect(screen.getByText("2024")).toBeInTheDocument()
+  })
+
+  it("shows RecordPlaceholder when no mbid", () => {
+    const { container } = render(<AlbumCard album={baseAlbum} onDelete={vi.fn()} />, { wrapper: Wrapper })
+
+    expect(container.querySelector("svg")).toBeInTheDocument()
+    expect(container.querySelector("img")).not.toBeInTheDocument()
+  })
+
+  it("shows cover image when cover URL is provided", async () => {
+    mockGetCoverArt.mockResolvedValue("https://example.com/cover.jpg")
+
+    const { container } = render(<AlbumCard album={albumWithMbid} onDelete={vi.fn()} />, { wrapper: Wrapper })
+
+    await waitFor(() => {
+      expect(container.querySelector("img")).toBeInTheDocument()
+    })
+    expect(container.querySelector("img")).toHaveAttribute("src", "https://example.com/cover.jpg")
   })
 })
