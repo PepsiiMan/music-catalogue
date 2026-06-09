@@ -1,73 +1,137 @@
-import React from "react"
-import { render, screen, fireEvent } from "@testing-library/react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { SearchCard } from "../components/SearchCard"
-import type { SearchResult } from "../types"
+import React from 'react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { SearchCard } from '../components/SearchCard'
 
-const mockGetCoverArt = vi.fn()
+const mockToast = vi.fn()
 
-vi.mock("../api/search", () => ({
-  getCoverArt: (...args: unknown[]) => mockGetCoverArt(...args),
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: () => ({ data: undefined }),
 }))
 
-function Wrapper({ children }: { children: React.ReactNode }) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  })
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-}
+vi.mock('motion/react', () => ({
+  motion: { div: 'div' },
+}))
 
-const result: SearchResult = {
-  mbid: "test-mbid",
-  title: "Test Song",
-  artist: "Test Performer",
-  date: "2024",
-}
+vi.mock('../api/search', () => ({
+  getCoverArt: vi.fn(),
+}))
 
-describe("SearchCard", () => {
-  beforeEach(() => {
-    mockGetCoverArt.mockReset()
-    mockGetCoverArt.mockResolvedValue(null)
-  })
+vi.mock('../components/Toast', () => ({
+  useToast: () => ({ toast: mockToast }),
+}))
 
-  it("renders title, artist, and date", () => {
-    render(<SearchCard result={result} onAdd={vi.fn()} isAdding={false} />, { wrapper: Wrapper })
+beforeEach(() => {
+  mockToast.mockClear()
+})
 
-    expect(screen.getByText("Test Song")).toBeInTheDocument()
-    expect(screen.getByText("Test Performer")).toBeInTheDocument()
-    expect(screen.getByText("2024")).toBeInTheDocument()
-  })
+describe('SearchCard', () => {
+  const baseResult = {
+    title: 'Test Album',
+    artist: 'Test Artist',
+    date: '2024-01-15',
+    mbid: 'test-mbid',
+  }
 
-  it("renders Add button", () => {
-    render(<SearchCard result={result} onAdd={vi.fn()} isAdding={false} />, { wrapper: Wrapper })
+  const defaultOnAdd = async () => {}
 
-    expect(screen.getByRole("button", { name: /add/i })).toBeInTheDocument()
-  })
-
-  it("disables Add button when isAdding is true", () => {
-    render(<SearchCard result={result} onAdd={vi.fn()} isAdding />, { wrapper: Wrapper })
-
-    expect(screen.getByRole("button", { name: /adding/i })).toBeDisabled()
+  it('renders title and artist from result', () => {
+    render(
+      <SearchCard
+        result={baseResult}
+        onAdd={defaultOnAdd}
+      />
+    )
+    expect(screen.getByText('Test Album')).toBeInTheDocument()
+    expect(screen.getByText('Test Artist')).toBeInTheDocument()
+    expect(screen.getByText('2024-01-15')).toBeInTheDocument()
   })
 
-  it("calls onAdd with album data when Add is clicked", () => {
-    const onAdd = vi.fn()
-    render(<SearchCard result={result} onAdd={onAdd} isAdding={false} />, { wrapper: Wrapper })
+  it('has border styling matching AlbumCard', () => {
+    const { container } = render(
+      <SearchCard
+        result={baseResult}
+        onAdd={defaultOnAdd}
+      />
+    )
+    const card = container.firstChild as HTMLElement
+    expect(card).toHaveClass('border-gray-700')
+  })
 
-    fireEvent.click(screen.getByRole("button", { name: /add/i }))
+  it('shows spinner and disables button while adding', async () => {
+    let resolveAdd!: () => void
+    const addPromise = new Promise<void>(resolve => { resolveAdd = resolve })
+    const onAdd = vi.fn().mockReturnValue(addPromise)
 
-    expect(onAdd).toHaveBeenCalledWith({
-      title: "Test Song",
-      artist: "Test Performer",
-      release: "2024",
-      mbid: "test-mbid",
+    render(
+      <SearchCard
+        result={baseResult}
+        onAdd={onAdd}
+      />
+    )
+
+    const button = screen.getByRole('button', { name: 'Add' })
+    fireEvent.click(button)
+
+    expect(button).toBeDisabled()
+
+    const spinner = button.querySelector('svg.animate-spin')
+    expect(spinner).toBeInTheDocument()
+
+    resolveAdd()
+    await waitFor(() => {
+      expect(onAdd).toHaveBeenCalledTimes(1)
     })
   })
 
-  it("shows RecordPlaceholder when no cover art", () => {
-    mockGetCoverArt.mockResolvedValue(null)
-    const { container } = render(<SearchCard result={result} onAdd={vi.fn()} isAdding={false} />, { wrapper: Wrapper })
+  it('shows success toast after album is added', async () => {
+    let resolveAdd!: () => void
+    const addPromise = new Promise<void>(resolve => { resolveAdd = resolve })
+    const onAdd = vi.fn().mockReturnValue(addPromise)
 
-    expect(container.querySelector("svg")).toBeInTheDocument()
+    render(
+      <SearchCard
+        result={baseResult}
+        onAdd={onAdd}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+    resolveAdd()
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith('Album added', 'success')
+    })
+  })
+
+  it('calls onAdd with correct album data', async () => {
+    const onAdd = vi.fn().mockResolvedValue(undefined)
+
+    render(
+      <SearchCard
+        result={baseResult}
+        onAdd={onAdd}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+
+    await waitFor(() => {
+      expect(onAdd).toHaveBeenCalledWith({
+        title: 'Test Album',
+        artist: 'Test Artist',
+        release: '2024-01-15',
+        mbid: 'test-mbid',
+      })
+    })
+  })
+
+  it('shows RecordPlaceholder when no cover art', () => {
+    const { container } = render(
+      <SearchCard
+        result={{ ...baseResult, mbid: undefined }}
+        onAdd={defaultOnAdd}
+      />
+    )
+    expect(container.querySelector('svg')).toBeInTheDocument()
   })
 })
