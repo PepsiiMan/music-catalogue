@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import type { Album } from "../types"
 import { getCoverArt } from "../api/search"
+import { RecordPlaceholder } from "./RecordPlaceholder"
 
 interface Props {
     album: Album
@@ -30,8 +31,10 @@ export function AlbumCard({album, onDelete}: Props) {
                     Remove
                 </button>
             </div>
-            {coverUrl && (
+            {coverUrl ? (
                 <img src={coverUrl} alt={album.title} crossOrigin="anonymous" className="w-32 h-32 object-cover rounded-lg flex-shrink-0" />
+            ) : (
+                <RecordPlaceholder />
             )}
         </div>
     )
