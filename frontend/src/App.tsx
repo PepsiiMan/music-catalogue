@@ -6,6 +6,7 @@ import { SearchPage } from "./pages/SearchPage"
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom"
 import { Layout } from "./components/Layout"
 import { ErrorBoundary } from "./components/ErrorBoundary"
+import { ToastProvider } from "./components/Toast"
 import { AnimatePresence } from "motion/react"
 
 const queryClient = new QueryClient({
@@ -35,7 +36,9 @@ export default function App(){
       <BrowserRouter>
       <Layout>
       <ErrorBoundary>
+      <ToastProvider>
       <AnimatedRoutes />
+      </ToastProvider>
       </ErrorBoundary>
       </Layout>
       </BrowserRouter>

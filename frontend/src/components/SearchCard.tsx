@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { SearchResult } from '../types'
 import { getCoverArt } from '../api/search'
 import type { Album } from '../types'
+import { RecordPlaceholder } from './RecordPlaceholder'
 
 interface Props {
   result: SearchResult
@@ -46,8 +47,10 @@ export function SearchCard({ result, onAdd, isAdding }: Props) {
           {isAdding ? 'Adding...' : 'Add'}
         </button>
       </div>
-      {coverUrl && (
+      {coverUrl ? (
         <img src={coverUrl} alt={result.title} crossOrigin="anonymous" className="w-32 h-32 object-cover rounded-lg flex-shrink-0" />
+      ) : (
+        <RecordPlaceholder />
       )}
     </div>
   )
