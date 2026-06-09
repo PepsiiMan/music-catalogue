@@ -1,17 +1,15 @@
+import { useState } from "react"
 import { useQuery, useMutation, useQueryClient} from "@tanstack/react-query"
 import { getAlbums, createAlbum, deleteAlbum, type AlbumFilters } from "../api/albums"
 import { AlbumCard } from "../components/AlbumCard"
 import { AddAlbumForm } from "../components/AlbumForm"
 import { FilterWidget } from "../components/FilterWidget"
-import { useState } from "react"
 import { motion } from "motion/react"
 import { useToast } from "../components/Toast"
-import { ConfirmDialog } from "../components/ConfirmDialog"
 
 export function AlbumsPage() {
     const queryClient = useQueryClient()
     const [filters, setFilters] = useState<AlbumFilters>({})
-    const [deletingId, setDeletingId] = useState<number | null>(null)
     const { toast } = useToast()
 
     const { data: albums, isLoading } = useQuery({
@@ -41,13 +39,6 @@ export function AlbumsPage() {
         },
     })
 
-    const handleDeleteConfirm = () => {
-        if (deletingId !== null) {
-            deleteMutation.mutate(deletingId)
-            setDeletingId(null)
-        }
-    }
-
     if (isLoading) return <p className="text-gray-500">Loading albums...</p>
 
     return (
@@ -66,20 +57,12 @@ export function AlbumsPage() {
                     <AlbumCard
                         key={album.id}
                         album={album}
-                        onDelete={id => setDeletingId(id)}
+                        onDelete={id => deleteMutation.mutate(id)}
                     />
                 ))}
             </div>
 
         </div>
-        <ConfirmDialog
-          open={deletingId !== null}
-          title="Remove album"
-          message="Are you sure you want to remove this album from your collection?"
-          confirmLabel="Remove"
-          onConfirm={handleDeleteConfirm}
-          onCancel={() => setDeletingId(null)}
-        />
         </motion.div>
     )
 }
