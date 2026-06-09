@@ -30,4 +30,12 @@ describe("SearchForm", () => {
     expect((screen.getByPlaceholderText(/album title/i) as HTMLInputElement).value).toBe("Pre")
     expect((screen.getByPlaceholderText(/artist/i) as HTMLInputElement).value).toBe("Filled")
   })
+
+  it("uses consistent dark styling (no hardcoded blue button)", () => {
+    const onSubmit = vi.fn()
+    const { container } = render(<SearchForm onSubmit={onSubmit} />)
+
+    const button = container.querySelector("button")
+    expect(button).not.toHaveClass("bg-blue-600")
+  })
 })

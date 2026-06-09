@@ -4,6 +4,7 @@ import { getReleasesByTitle, getReleasesByArtist, getReleasesByTitleAndArtist } 
 import { createAlbum } from '../db/albums'
 import { SearchCard } from '../components/SearchCard'
 import { SearchForm } from '../components/SearchForm'
+import { SkeletonCard } from '../components/SkeletonCard'
 import type { SearchResult } from '../types'
 import { motion } from "motion/react"
 
@@ -53,10 +54,32 @@ export function SearchPage() {
 
       <SearchForm onSubmit={handleSubmit} initialTitle={title} initialArtist={artist} />
 
-      {isLoading && <p className="text-gray-400 mt-8">Searching...</p>}
+      {isLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      )}
 
       {error && (
         <p className="text-red-400 mt-8">Search failed. Is the backend running?</p>
+      )}
+
+      {!title && !artist && !isLoading && (
+        <div className="text-center py-16">
+          <p className="text-xl text-gray-300">Search for music</p>
+          <p className="text-gray-500 mt-2">
+            Enter an album title or artist name to get started
+          </p>
+        </div>
+      )}
+
+      {Array.isArray(results) && results.length === 0 && (
+        <div className="text-center py-16">
+          <p className="text-xl text-gray-300">No results found</p>
+          <p className="text-gray-500 mt-2">Try a different search term</p>
+        </div>
       )}
 
       {Array.isArray(results) && results.length > 0 && (
