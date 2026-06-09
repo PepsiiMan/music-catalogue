@@ -4,6 +4,7 @@ import { getAlbums, createAlbum, deleteAlbum, type AlbumFilters } from "../api/a
 import { AlbumCard } from "../components/AlbumCard"
 import { AddAlbumForm } from "../components/AlbumForm"
 import { FilterWidget } from "../components/FilterWidget"
+import { SkeletonCard } from "../components/SkeletonCard"
 import { motion } from "motion/react"
 import { useToast } from "../components/Toast"
 
@@ -39,8 +40,6 @@ export function AlbumsPage() {
         },
     })
 
-    if (isLoading) return <p className="text-gray-500">Loading albums...</p>
-
     return (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -53,15 +52,27 @@ export function AlbumsPage() {
             <FilterWidget filters={filters} onChange={setFilters} />
             <AddAlbumForm onSubmit={data => addMutation.mutate(data)} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                {Array.isArray(albums) && albums.map(album => (
-                    <AlbumCard
-                        key={album.id}
-                        album={album}
-                        onDelete={id => deleteMutation.mutate(id)}
-                    />
-                ))}
+                {isLoading ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                        <SkeletonCard key={i} />
+                    ))
+                ) : Array.isArray(albums) && albums.length > 0 ? (
+                    albums.map(album => (
+                        <AlbumCard
+                            key={album.id}
+                            album={album}
+                            onDelete={id => deleteMutation.mutate(id)}
+                        />
+                    ))
+                ) : (
+                    <div className="col-span-full text-center py-16">
+                        <p className="text-xl text-gray-300">Your collection is empty</p>
+                        <p className="text-gray-500 mt-2">
+                            <a href="/search" className="text-violet-400 hover:text-violet-300 underline">Search for music</a> to add your first album
+                        </p>
+                    </div>
+                )}
             </div>
-
         </div>
         </motion.div>
     )
