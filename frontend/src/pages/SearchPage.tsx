@@ -5,6 +5,7 @@ import { createAlbum } from '../db/albums'
 import { SearchCard } from '../components/SearchCard'
 import { SearchForm } from '../components/SearchForm'
 import type { SearchResult } from '../types'
+import { motion } from "motion/react"
 
 export function SearchPage() {
   const queryClient = useQueryClient()
@@ -41,6 +42,12 @@ export function SearchPage() {
   }
 
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+    >
     <div className="max-w-4xl mx-auto p-8">
       <h1 className="text-3xl font-bold mb-8">Search</h1>
 
@@ -65,5 +72,6 @@ export function SearchPage() {
         </div>
       )}
     </div>
+    </motion.div>
   )
 }

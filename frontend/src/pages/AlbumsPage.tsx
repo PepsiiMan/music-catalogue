@@ -4,6 +4,7 @@ import { AlbumCard } from "../components/AlbumCard"
 import { AddAlbumForm } from "../components/AlbumForm"
 import { FilterWidget } from "../components/FilterWidget"
 import { useState } from "react"
+import { motion } from "motion/react"
 
 export function AlbumsPage() {
     const queryClient = useQueryClient()
@@ -27,7 +28,13 @@ export function AlbumsPage() {
     if (isLoading) return <p className="text-gray-500">Loading albums...</p>
 
     return (
-        <div className="max-2-4xl mx-auto p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+        <div className="max-w-4xl mx-auto p-8">
             <h1 className="text-3xl font-bold mb-8">My Collection</h1>
             <FilterWidget filters={filters} onChange={setFilters} />
             <AddAlbumForm onSubmit={data => addMutation.mutate(data)} />
@@ -42,5 +49,6 @@ export function AlbumsPage() {
             </div>
 
         </div>
+        </motion.div>
     )
 }
