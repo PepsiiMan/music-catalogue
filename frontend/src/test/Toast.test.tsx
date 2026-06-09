@@ -75,4 +75,28 @@ describe("Toast", () => {
     const toastEl = screen.getByText("Success!").closest("div")
     expect(toastEl?.className).toContain("bg-green-800")
   })
+
+  it("renders error variant with correct class", () => {
+    function VariantHarness() {
+      const { toast } = useToast()
+      return <button onClick={() => toast("Error!", "error")}>Show error</button>
+    }
+    renderWithProvider(<VariantHarness />)
+    fireEvent.click(screen.getByRole("button", { name: /show error/i }))
+
+    const toastEl = screen.getByText("Error!").closest("div")
+    expect(toastEl?.className).toContain("bg-red-800")
+  })
+
+  it("renders info variant with correct class", () => {
+    function VariantHarness() {
+      const { toast } = useToast()
+      return <button onClick={() => toast("Info!", "info")}>Show info</button>
+    }
+    renderWithProvider(<VariantHarness />)
+    fireEvent.click(screen.getByRole("button", { name: /show info/i }))
+
+    const toastEl = screen.getByText("Info!").closest("div")
+    expect(toastEl?.className).toContain("bg-gray-800")
+  })
 })

@@ -37,4 +37,22 @@ describe("FilterWidget", () => {
 
     expect(screen.queryByText(/\(\d+\)/)).not.toBeInTheDocument()
   })
+
+  it("renders controls with provided filter values", () => {
+    const filters: AlbumFilters = { search: "queen", sortBy: "release", order: "desc" }
+    render(<FilterWidget filters={filters} onChange={vi.fn()} />)
+
+    expect((screen.getByPlaceholderText("Search...") as HTMLInputElement).value).toBe("queen")
+    expect((screen.getByDisplayValue("Release date") as HTMLSelectElement)).toBeInTheDocument()
+    expect((screen.getByDisplayValue("Descending") as HTMLSelectElement)).toBeInTheDocument()
+  })
+
+  it("fires onChange when search input changes", () => {
+    const onChange = vi.fn()
+    render(<FilterWidget filters={{}} onChange={onChange} />)
+
+    fireEvent.change(screen.getByPlaceholderText("Search..."), { target: { value: "new search" } })
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ search: "new search" }))
+  })
 })

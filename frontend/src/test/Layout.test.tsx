@@ -44,4 +44,17 @@ describe("Layout", () => {
       expect(link.className).toContain("text-gray-400")
     })
   })
+
+  it("uses responsive classes: desktop nav hidden by default, mobile nav hidden on md+", () => {
+    renderWithRouter("/")
+    const navs = document.querySelectorAll("nav")
+    expect(navs.length).toBe(2)
+
+    const desktopNav = navs[0]
+    expect(desktopNav.className).toContain("hidden")
+    expect(desktopNav.className).toContain("md:flex")
+
+    const mobileNav = navs[1]
+    expect(mobileNav.className).toContain("md:hidden")
+  })
 })
