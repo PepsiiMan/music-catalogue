@@ -11,6 +11,7 @@ export interface AlbumFilters {
   searchIn?: 'title' | 'artist' | 'both'
   sortBy?: 'release' | 'id' | 'title' | 'artist'
   order?: 'asc' | 'desc'
+  limit?: number
 }
 
 export interface SearchResult {
