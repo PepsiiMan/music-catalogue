@@ -124,4 +124,14 @@ describe('SearchCard', () => {
       })
     })
   })
+
+  it('shows RecordPlaceholder when no cover art', () => {
+    const { container } = render(
+      <SearchCard
+        result={{ ...baseResult, mbid: undefined }}
+        onAdd={defaultOnAdd}
+      />
+    )
+    expect(container.querySelector('svg')).toBeInTheDocument()
+  })
 })
