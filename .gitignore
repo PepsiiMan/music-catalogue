@@ -20,3 +20,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Agent / AI
+AGENTS.md
+docs/agents/
