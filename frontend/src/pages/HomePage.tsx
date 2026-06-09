@@ -1,7 +1,14 @@
 import { Link } from "react-router-dom"
+import { motion } from "motion/react"
 
 export function HomePage() {
     return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
         <div className="min-h-screen flex items-center justify-center">
             <div className="max-w-4xl w-full p-8">
             <div className="text-center">
@@ -18,5 +25,6 @@ export function HomePage() {
 
             </div>
         </div>
+        </motion.div>
     )
 }
