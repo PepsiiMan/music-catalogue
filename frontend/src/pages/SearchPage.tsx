@@ -65,8 +65,7 @@ export function SearchPage() {
             <SearchCard
               key={result.mbid}
               result={result}
-              onAdd={(album) => addMutation.mutate(album)}
-              isAdding={addMutation.isPending}
+              onAdd={(album) => addMutation.mutateAsync(album)}
             />
           ))}
         </div>
