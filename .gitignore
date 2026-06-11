@@ -24,6 +24,7 @@ Thumbs.db
 # Agent / AI
 AGENTS.md
 docs/agents/
+prd.md
 
 # Python
 __pycache__/
@@ -35,3 +36,4 @@ __pycache__/
 # Album detector generated output
 services/album-detector/crops/
 services/album-detector/output.mp4
+*.mp4
