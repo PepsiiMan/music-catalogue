@@ -29,7 +29,7 @@ def synthetic_video_path(tmp_path: Path) -> Path:
 
 def test_video_sampler_returns_frames_at_default_interval(synthetic_video_path: Path):
     sampler = VideoSampler()
-    frames = sampler.sample(synthetic_video_path)
+    frames = list(sampler.sample(synthetic_video_path))
 
     # 3-second video at 0.5s interval -> ~6 frames (0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0)
     # But since it's only 3 seconds, we might get 7 or a few less depending on exact duration
@@ -43,7 +43,7 @@ def test_video_sampler_returns_frames_at_default_interval(synthetic_video_path: 
 
 def test_video_sampler_returns_frames_at_custom_interval(synthetic_video_path: Path):
     sampler = VideoSampler(interval=1.0)
-    frames = sampler.sample(synthetic_video_path)
+    frames = list(sampler.sample(synthetic_video_path))
 
     # 3-second video at 1.0s interval -> ~4 frames (0.0, 1.0, 2.0, 3.0)
     assert len(frames) >= 3
@@ -53,4 +53,4 @@ def test_video_sampler_returns_frames_at_custom_interval(synthetic_video_path: P
 def test_video_sampler_raises_on_missing_file():
     sampler = VideoSampler()
     with pytest.raises(RuntimeError):
-        sampler.sample(Path("/nonexistent/path.mp4"))
+        list(sampler.sample(Path("/nonexistent/path.mp4")))

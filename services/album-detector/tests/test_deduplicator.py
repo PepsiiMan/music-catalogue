@@ -1,5 +1,5 @@
 from album_detector.models import Album
-from album_detector.deduplicator import deduplicate
+from album_detector.deduplicator import deduplicate, normalize
 
 
 def test_deduplicator_removes_exact_duplicates():
@@ -36,3 +36,36 @@ def test_deduplicator_removes_all_duplicates():
     result = deduplicate(albums)
     assert len(result) == 1
     assert result[0].title == "Same"
+
+
+def test_deduplicator_normalizes_punctuation():
+    albums = [
+        Album(row=0, col=0, source_frame=0, title="Rheia (Redux)", artist="Oathbreaker"),
+        Album(row=0, col=1, source_frame=1, title="Rheia(Redux)", artist="Oathbreaker"),
+    ]
+    result = deduplicate(albums)
+    assert len(result) == 1
+
+
+def test_deduplicator_fuzzy_matches_ocr_typos():
+    albums = [
+        Album(row=0, col=0, source_frame=0, title="NieRReplicant", artist="Square Enix Music,MONACA,Keiichi.."),
+        Album(row=0, col=1, source_frame=1, title="NieRReplicant", artist="Square EnixMusic,MONACA,Kelichi.."),
+    ]
+    result = deduplicate(albums)
+    assert len(result) == 1
+
+
+def test_deduplicator_keeps_distinct_albums():
+    albums = [
+        Album(row=0, col=0, source_frame=0, title="BlueRev", artist="Alvvays"),
+        Album(row=0, col=1, source_frame=1, title="BlueWave", artist="Alvvays"),
+    ]
+    result = deduplicate(albums)
+    assert len(result) == 2
+
+
+def test_normalize_removes_punctuation_and_whitespace():
+    assert normalize("Rheia (Redux)") == "rheiaredux"
+    assert normalize("Hello, World!") == "helloworld"
+    assert normalize("A.B.C") == "abc"
