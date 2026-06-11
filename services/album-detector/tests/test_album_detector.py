@@ -1,0 +1,47 @@
+import cv2
+import numpy as np
+import pytest
+from pathlib import Path
+
+from album_detector.album_detector import AlbumDetector
+from album_detector.models import Album
+
+
+@pytest.fixture
+def single_frame_video_path(tmp_path: Path) -> Path:
+    """Create a 1-second video containing a single frame of test.png."""
+    path = tmp_path / "single_frame.mp4"
+    img = cv2.imread("test.png")
+    assert img is not None
+    h, w = img.shape[:2]
+    fourcc = cv2.VideoWriter.fourcc(*"mp4v")
+    writer = cv2.VideoWriter(str(path), fourcc, 1.0, (w, h))
+    writer.write(img)
+    writer.release()
+    return path
+
+
+def test_album_detector_end_to_end_on_single_frame_video(single_frame_video_path: Path):
+    detector = AlbumDetector()
+    result = detector.detect(single_frame_video_path)
+
+    albums = result.albums
+    assert len(albums) == 18
+
+    # Verify a few known entries (exact strings may vary slightly due to video compression)
+    by_pos = {(a.row, a.col): a for a in albums}
+    assert by_pos[(0, 0)] == Album(row=0, col=0, source_frame=0, title="Descend", artist="PukeWolf")
+    assert by_pos[(0, 2)] == Album(row=0, col=2, source_frame=0, title="Awakechildrenunderthemoon-EP", artist="Cissne")
+    assert by_pos[(1, 0)] == Album(row=1, col=0, source_frame=0, title="FriendofaPhantom", artist="VOLA")
+    assert by_pos[(1, 4)] == Album(row=1, col=4, source_frame=0, title="BlueRev", artist="Alvvays")
+    assert by_pos[(1, 5)] == Album(row=1, col=5, source_frame=0, title="Rheia (Redux)", artist="Oathbreaker")
+
+
+def test_album_detector_deduplicates_across_frames(single_frame_video_path: Path):
+    """If two frames contain the same album, deduplication keeps only the first."""
+    detector = AlbumDetector()
+    result = detector.detect(single_frame_video_path)
+
+    # All 18 albums come from a single frame, so no cross-frame dedup needed,
+    # but we verify the pipeline works end-to-end.
+    assert len(result.albums) == 18

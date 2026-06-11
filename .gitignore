@@ -24,3 +24,14 @@ Thumbs.db
 # Agent / AI
 AGENTS.md
 docs/agents/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Album detector generated output
+services/album-detector/crops/
+services/album-detector/output.mp4
