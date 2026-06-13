@@ -131,7 +131,7 @@ export function ImportPage() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="album-grid">
-              {result.albums.map((album, index) => (
+              {result.albums.map((_album, index) => (
                 <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                   {editing?.index === index && editing.field === "title" ? (
                     <input
