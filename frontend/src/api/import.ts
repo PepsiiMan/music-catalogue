@@ -44,9 +44,7 @@ export const detectAlbums = async (video: File): Promise<DetectionResult> => {
   const formData = new FormData()
   formData.append('video', video)
   try {
-    const response = await api.post<unknown>('/import/detect', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const response = await api.post<unknown>('/import/detect', formData)
     if (!isValidDetectionResult(response.data)) {
       throw new ImportInvalidResponseError()
     }

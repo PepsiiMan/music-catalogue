@@ -28,9 +28,7 @@ describe("detectAlbums", () => {
     const actual = await detectAlbums(file)
 
     expect(actual).toEqual(result)
-    expect(api.post).toHaveBeenCalledWith("/import/detect", expect.any(FormData), {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
+    expect(api.post).toHaveBeenCalledWith("/import/detect", expect.any(FormData))
 
     const formData = vi.mocked(api.post).mock.calls[0][1] as FormData
     expect(formData.get("video")).toBe(file)

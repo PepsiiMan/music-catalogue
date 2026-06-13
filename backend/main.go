@@ -20,13 +20,13 @@ func main() {
 	r.Use(middleware.Timeout(30 * time.Second))
 	r.Use(middleware.Compress(5))
 	r.Use(middleware.ThrottleBacklog(5, 10, 30*time.Second))
-	r.Use(middleware.RequestSize(1 << 20))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
 	r.Route("/api/search", func(r chi.Router) {
+		r.Use(middleware.RequestSize(1 << 20))
 		musicBrainzClient := musicbrainz.NewClient()
 		musicBrainzHandler := musicbrainz.NewHandler(musicBrainzClient)
 		musicBrainzHandler.RegisterRoutes(r)
