@@ -2,7 +2,7 @@ import logging
 import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, HTTPException, UploadFile
 
 from album_detector.album_detector import AlbumDetector
 
@@ -22,7 +22,16 @@ async def detect(video: UploadFile):
 
     try:
         logger.info("Running album detection pipeline")
-        result = detector.detect(tmp_path)
+        try:
+            result = detector.detect(tmp_path)
+        except RuntimeError:
+            raise HTTPException(status_code=400, detail="Invalid video file")
+        if result.frames_with_detections == 0:
+            raise HTTPException(status_code=422, detail="No album grid detected in any frame")
+        if result.frames_with_detections > 0 and all(
+            not a.title and not a.artist for a in result.albums
+        ):
+            raise HTTPException(status_code=422, detail="No readable text found")
         logger.info(
             "Pipeline complete: %d albums, %d frames processed",
             len(result.albums),
