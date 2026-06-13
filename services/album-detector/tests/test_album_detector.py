@@ -45,3 +45,13 @@ def test_album_detector_deduplicates_across_frames(single_frame_video_path: Path
     # All 18 albums come from a single frame, so no cross-frame dedup needed,
     # but we verify the pipeline works end-to-end.
     assert len(result.albums) == 18
+
+
+def test_detection_result_includes_frame_counts(single_frame_video_path: Path):
+    """DetectionResult reports total frames processed and frames with detections."""
+    detector = AlbumDetector()
+    result = detector.detect(single_frame_video_path)
+
+    assert result.total_frames_processed >= 1
+    assert result.frames_with_detections >= 1
+    assert result.frames_with_detections <= result.total_frames_processed
