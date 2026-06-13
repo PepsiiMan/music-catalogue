@@ -14,6 +14,10 @@ http://localhost:80 {
         reverse_proxy backend:8080
     }
 
+    handle /detect/* {
+        reverse_proxy album-detector:8000
+    }
+
     handle {
         try_files {path} /index.html
         file_server

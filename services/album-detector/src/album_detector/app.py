@@ -12,6 +12,11 @@ app = FastAPI()
 detector = AlbumDetector()
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @app.post("/detect")
 async def detect(video: UploadFile):
     with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:

@@ -23,6 +23,20 @@ services:
   backend:
     build: ./backend
     env_file: .env
+    environment:
+      ALBUM_DETECTOR_URL: http://album-detector:8000
+    depends_on:
+      - album-detector
+
+  album-detector:
+    build: ./services/album-detector
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 volumes:
   caddy_data:
