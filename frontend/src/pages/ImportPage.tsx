@@ -1,13 +1,41 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion } from "motion/react"
 import { useToast } from "../components/Toast"
-import { detectAlbums } from "../api/import"
+import { detectAlbums, ImportNoAlbumsError } from "../api/import"
+import { PROCESSING_MESSAGES } from "../config/import"
 import type { DetectionResult } from "../types"
 
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"]
 const MAX_FILE_SIZE = 30 * 1024 * 1024
 
 type Phase = "idle" | "processing" | "results"
+
+function ProgressView() {
+  const [messageIndex, setMessageIndex] = useState(() => Math.floor(Math.random() * PROCESSING_MESSAGES.length))
+  const [dots, setDots] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => {
+        if (prev >= 3) {
+          setMessageIndex(Math.floor(Math.random() * PROCESSING_MESSAGES.length))
+          return 0
+        }
+        return prev + 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="text-center py-16" data-testid="processing-view">
+      <p className="text-xl text-gray-300">
+        {PROCESSING_MESSAGES[messageIndex]}
+        {".".repeat(dots)}
+      </p>
+    </div>
+  )
+}
 
 export function ImportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -34,9 +62,15 @@ export function ImportPage() {
       const data = await detectAlbums(file)
       setResult(data)
       setPhase("results")
-    } catch {
+    } catch (error) {
       setPhase("idle")
-      toast("Upload failed. Please try again.", "error")
+      if (error instanceof ImportNoAlbumsError) {
+        toast(error.message, "info")
+      } else if (error instanceof Error) {
+        toast(error.message, "error")
+      } else {
+        toast("Upload failed. Please try again.", "error")
+      }
     }
   }
 
@@ -62,12 +96,7 @@ export function ImportPage() {
       <div className="max-w-4xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-8">Import</h1>
 
-        {phase === "processing" && (
-          <div className="text-center py-16" data-testid="processing-view">
-            <p className="text-xl text-gray-300">Staring at the video so you don't have to…</p>
-            <p className="text-gray-500 mt-2">Detecting albums frame by frame</p>
-          </div>
-        )}
+        {phase === "processing" && <ProgressView />}
 
         {phase === "results" && result && (
           <div className="text-center py-16" data-testid="results-view">
