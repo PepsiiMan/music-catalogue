@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"music-catalogue/backend/internal/albumdetector"
 	"music-catalogue/backend/internal/coverartarchive"
 	"music-catalogue/backend/internal/musicbrainz"
 
@@ -33,6 +34,13 @@ func main() {
 		coverArtClient := coverartarchive.NewClient()
 		coverArtHandler := coverartarchive.NewHandler(coverArtClient)
 		coverArtHandler.RegisterRoutes(r)
+	})
+
+	r.Route("/api/import", func(r chi.Router) {
+		r.Use(middleware.RequestSize(30 << 20))
+		albumDetectorClient := albumdetector.NewClient()
+		albumDetectorHandler := albumdetector.NewHandler(albumDetectorClient)
+		albumDetectorHandler.RegisterRoutes(r)
 	})
 
 	if err := http.ListenAndServe(":8080", r); err != nil {
