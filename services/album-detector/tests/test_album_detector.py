@@ -55,3 +55,33 @@ def test_detection_result_includes_frame_counts(single_frame_video_path: Path):
     assert result.total_frames_processed >= 1
     assert result.frames_with_detections >= 1
     assert result.frames_with_detections <= result.total_frames_processed
+
+
+def test_detect_stream_yields_unique_albums(single_frame_video_path: Path):
+    """detect_stream() yields each unique album exactly once."""
+    detector = AlbumDetector()
+    streamed = list(detector.detect_stream(single_frame_video_path))
+
+    assert len(streamed) == 18
+    # All yielded items are Album instances
+    assert all(isinstance(a, Album) for a in streamed)
+    # No duplicate (title, artist) pairs
+    seen = set()
+    for album in streamed:
+        key = (album.title.lower(), album.artist.lower())
+        assert key not in seen, f"Duplicate yielded: {album}"
+        seen.add(key)
+
+
+def test_detect_stream_matches_detect(single_frame_video_path: Path):
+    """detect_stream() produces the same albums as detect()."""
+    detector = AlbumDetector()
+    result = detector.detect(single_frame_video_path)
+    streamed = list(detector.detect_stream(single_frame_video_path))
+
+    # Same number of unique albums
+    assert len(streamed) == len(result.albums)
+    # Same set of (title, artist) pairs
+    detect_keys = {(a.title, a.artist) for a in result.albums}
+    stream_keys = {(a.title, a.artist) for a in streamed}
+    assert stream_keys == detect_keys
