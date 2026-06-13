@@ -42,7 +42,23 @@ export function ImportPage() {
   const [phase, setPhase] = useState<Phase>("idle")
   const [isDragging, setIsDragging] = useState(false)
   const [result, setResult] = useState<DetectionResult | null>(null)
+  const [edits, setEdits] = useState<Record<number, { title?: string; artist?: string }>>({})
+  const [editing, setEditing] = useState<{ index: number; field: "title" | "artist" } | null>(null)
   const { toast } = useToast()
+
+  const getAlbumValue = (index: number, field: "title" | "artist") => {
+    if (edits[index]?.[field] !== undefined) return edits[index][field]!
+    return result!.albums[index][field]
+  }
+
+  const handleEditSave = (index: number, field: "title" | "artist", value: string) => {
+    setEdits(prev => ({ ...prev, [index]: { ...prev[index], [field]: value } }))
+    setEditing(null)
+  }
+
+  const handleEditCancel = () => {
+    setEditing(null)
+  }
 
   const validateFile = (file: File): boolean => {
     if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
@@ -99,8 +115,67 @@ export function ImportPage() {
         {phase === "processing" && <ProgressView />}
 
         {phase === "results" && result && (
-          <div className="text-center py-16" data-testid="results-view">
-            <p className="text-xl text-gray-300">Detected {result.albums.length} album(s)</p>
+          <div className="py-8" data-testid="results-view">
+            <div className="flex gap-6 mb-8 justify-center">
+              <div className="bg-gray-800 rounded-lg px-4 py-2">
+                <p className="text-gray-400 text-sm">Albums Detected</p>
+                <p className="text-white text-2xl font-bold">{result.albums.length}</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg px-4 py-2">
+                <p className="text-gray-400 text-sm">Frames Processed</p>
+                <p className="text-white text-2xl font-bold">{result.total_frames_processed}</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg px-4 py-2">
+                <p className="text-gray-400 text-sm">Frames with Detections</p>
+                <p className="text-white text-2xl font-bold">{result.frames_with_detections}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="album-grid">
+              {result.albums.map((_album, index) => (
+                <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                  {editing?.index === index && editing.field === "title" ? (
+                    <input
+                      type="text"
+                      defaultValue={getAlbumValue(index, "title")}
+                      autoFocus
+                      className="bg-gray-700 text-white rounded px-2 py-1 w-full"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleEditSave(index, "title", (e.target as HTMLInputElement).value)
+                        if (e.key === "Escape") handleEditCancel()
+                      }}
+                      onBlur={(e) => handleEditSave(index, "title", e.target.value)}
+                    />
+                  ) : (
+                    <h3
+                      className="text-white font-semibold cursor-pointer hover:bg-gray-700 rounded px-2 py-1 -mx-2 -my-1"
+                      onClick={() => setEditing({ index, field: "title" })}
+                    >
+                      {getAlbumValue(index, "title")}
+                    </h3>
+                  )}
+                  {editing?.index === index && editing.field === "artist" ? (
+                    <input
+                      type="text"
+                      defaultValue={getAlbumValue(index, "artist")}
+                      autoFocus
+                      className="bg-gray-700 text-gray-400 rounded px-2 py-1 w-full mt-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleEditSave(index, "artist", (e.target as HTMLInputElement).value)
+                        if (e.key === "Escape") handleEditCancel()
+                      }}
+                      onBlur={(e) => handleEditSave(index, "artist", e.target.value)}
+                    />
+                  ) : (
+                    <p
+                      className="text-gray-400 mt-1 cursor-pointer hover:bg-gray-700 rounded px-2 py-1 -mx-2 -my-1"
+                      onClick={() => setEditing({ index, field: "artist" })}
+                    >
+                      {getAlbumValue(index, "artist")}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
