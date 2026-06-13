@@ -152,7 +152,9 @@ describe("ImportPage", () => {
     fireEvent.change(input, { target: { files: [file] } })
 
     expect(await screen.findByTestId("results-view")).toBeInTheDocument()
-    expect(screen.getByText(/1 album\(s\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/albums detected/i)).toBeInTheDocument()
+    expect(screen.getByText(/frames processed/i)).toBeInTheDocument()
+    expect(screen.getByText(/frames with detections/i)).toBeInTheDocument()
   })
 
   it("shows error toast and returns to idle on network error", async () => {
@@ -195,5 +197,124 @@ describe("ImportPage", () => {
 
     expect(await screen.findByText(/no albums detected/i)).toBeInTheDocument()
     expect(await screen.findByTestId("upload-zone")).toBeInTheDocument()
+  })
+
+  it("displays detection statistics in results view", async () => {
+    const { detectAlbums } = await import("../api/import")
+    const result: DetectionResult = {
+      albums: [
+        { title: "OK Computer", artist: "Radiohead", row: 0, col: 1, source_frame: 42 },
+        { title: "In Rainbows", artist: "Radiohead", row: 1, col: 0, source_frame: 42 },
+      ],
+      total_frames_processed: 150,
+      frames_with_detections: 3,
+    }
+    vi.mocked(detectAlbums).mockResolvedValue(result)
+
+    render(<ImportPage />, { wrapper: Wrapper })
+    const input = screen.getByTestId("file-input")
+    const file = new File(["video"], "clip.mp4", { type: "video/mp4" })
+
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByTestId("results-view")).toBeInTheDocument()
+    expect(screen.getByText(/albums detected/i)).toBeInTheDocument()
+    expect(screen.getByText("2")).toBeInTheDocument()
+    expect(screen.getByText(/frames processed/i)).toBeInTheDocument()
+    expect(screen.getByText("150")).toBeInTheDocument()
+    expect(screen.getByText(/frames with detections/i)).toBeInTheDocument()
+    expect(screen.getByText("3")).toBeInTheDocument()
+  })
+
+  it("renders a responsive card grid with detected albums", async () => {
+    const { detectAlbums } = await import("../api/import")
+    const result: DetectionResult = {
+      albums: [
+        { title: "OK Computer", artist: "Radiohead", row: 0, col: 1, source_frame: 42 },
+        { title: "Random Access Memories", artist: "Daft Punk", row: 1, col: 0, source_frame: 42 },
+        { title: "The Dark Side of the Moon", artist: "Pink Floyd", row: 0, col: 0, source_frame: 42 },
+      ],
+      total_frames_processed: 100,
+      frames_with_detections: 1,
+    }
+    vi.mocked(detectAlbums).mockResolvedValue(result)
+
+    render(<ImportPage />, { wrapper: Wrapper })
+    const input = screen.getByTestId("file-input")
+    const file = new File(["video"], "clip.mp4", { type: "video/mp4" })
+
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByTestId("results-view")).toBeInTheDocument()
+    expect(screen.getByText("OK Computer")).toBeInTheDocument()
+    expect(screen.getByText("Radiohead")).toBeInTheDocument()
+    expect(screen.getByText("Random Access Memories")).toBeInTheDocument()
+    expect(screen.getByText("Daft Punk")).toBeInTheDocument()
+    expect(screen.getByText("The Dark Side of the Moon")).toBeInTheDocument()
+    expect(screen.getByText("Pink Floyd")).toBeInTheDocument()
+    const grid = screen.getByTestId("album-grid")
+    expect(grid.className).toContain("grid-cols-1")
+    expect(grid.className).toContain("md:grid-cols-2")
+    expect(grid.className).toContain("lg:grid-cols-3")
+  })
+
+  it("allows inline editing of album title on click and saves on Enter", async () => {
+    const { detectAlbums } = await import("../api/import")
+    const result: DetectionResult = {
+      albums: [
+        { title: "OK Computer", artist: "Radiohead", row: 0, col: 1, source_frame: 42 },
+      ],
+      total_frames_processed: 100,
+      frames_with_detections: 1,
+    }
+    vi.mocked(detectAlbums).mockResolvedValue(result)
+
+    render(<ImportPage />, { wrapper: Wrapper })
+    const input = screen.getByTestId("file-input")
+    const file = new File(["video"], "clip.mp4", { type: "video/mp4" })
+
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByTestId("results-view")).toBeInTheDocument()
+    const titleElement = screen.getByText("OK Computer")
+    fireEvent.click(titleElement)
+
+    const editInput = screen.getByDisplayValue("OK Computer")
+    expect(editInput.tagName).toBe("INPUT")
+
+    fireEvent.change(editInput, { target: { value: "Kid A" } })
+    fireEvent.keyDown(editInput, { key: "Enter" })
+
+    expect(screen.getByText("Kid A")).toBeInTheDocument()
+    expect(screen.queryByText("OK Computer")).not.toBeInTheDocument()
+  })
+
+  it("cancels inline edit on Escape and reverts to original text", async () => {
+    const { detectAlbums } = await import("../api/import")
+    const result: DetectionResult = {
+      albums: [
+        { title: "OK Computer", artist: "Radiohead", row: 0, col: 1, source_frame: 42 },
+      ],
+      total_frames_processed: 100,
+      frames_with_detections: 1,
+    }
+    vi.mocked(detectAlbums).mockResolvedValue(result)
+
+    render(<ImportPage />, { wrapper: Wrapper })
+    const input = screen.getByTestId("file-input")
+    const file = new File(["video"], "clip.mp4", { type: "video/mp4" })
+
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByTestId("results-view")).toBeInTheDocument()
+    const titleElement = screen.getByText("OK Computer")
+    fireEvent.click(titleElement)
+
+    const editInput = screen.getByDisplayValue("OK Computer")
+    fireEvent.change(editInput, { target: { value: "Kid A" } })
+    fireEvent.keyDown(editInput, { key: "Escape" })
+
+    expect(screen.getByText("OK Computer")).toBeInTheDocument()
+    expect(screen.queryByText("Kid A")).not.toBeInTheDocument()
   })
 })
