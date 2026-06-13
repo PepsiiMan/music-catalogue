@@ -127,6 +127,12 @@ def test_detect_invalid_video_returns_400(client: TestClient):
     assert response.json()["detail"] == "Invalid video file"
 
 
+def test_health_returns_ok(client: TestClient):
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
 def test_detect_cleans_up_temp_file_on_error(client: TestClient):
     """Temp file should be removed even when the pipeline raises."""
     import tempfile
