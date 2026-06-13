@@ -23,11 +23,16 @@ class AlbumDetector:
     def detect(self, video_path: Path) -> DetectionResult:
         """Process a video file and return a deduplicated list of detected albums."""
         all_albums: list[Album] = []
+        total_frames = 0
+        frames_with_detections = 0
 
         for frame_idx, frame in enumerate(self.sampler.sample(video_path)):
+            total_frames += 1
             cells = self.grid_detector.detect(frame)
             text_results = self.text_extractor.extract_all(frame, cells)
             del frame  # free the frame before processing next
+            if cells:
+                frames_with_detections += 1
             for cell, (title, artist) in zip(cells, text_results):
                 all_albums.append(
                     Album(
@@ -40,4 +45,8 @@ class AlbumDetector:
                 )
 
         unique_albums = deduplicate(all_albums)
-        return DetectionResult(albums=unique_albums)
+        return DetectionResult(
+            albums=unique_albums,
+            total_frames_processed=total_frames,
+            frames_with_detections=frames_with_detections,
+        )

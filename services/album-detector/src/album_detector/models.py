@@ -23,3 +23,5 @@ class Album:
 @dataclass(frozen=True)
 class DetectionResult:
     albums: list[Album]
+    total_frames_processed: int
+    frames_with_detections: int
