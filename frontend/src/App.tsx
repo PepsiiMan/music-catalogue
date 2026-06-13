@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { AlbumsPage } from "./pages/AlbumsPage"
 import { HomePage } from "./pages/HomePage"
+import { ImportPage } from "./pages/ImportPage"
 import { SearchPage } from "./pages/SearchPage"
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom"
 import { Layout } from "./components/Layout"
@@ -25,6 +26,7 @@ function AnimatedRoutes() {
         <Route path="/" element={<HomePage />}/>
         <Route path="/albums" element={<AlbumsPage />}/>
         <Route path="/search" element={<SearchPage />}/>
+        <Route path="/import" element={<ImportPage />}/>
       </Routes>
     </AnimatePresence>
   )

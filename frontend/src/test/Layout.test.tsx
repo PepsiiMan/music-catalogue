@@ -27,6 +27,7 @@ describe("Layout", () => {
     expect(screen.getAllByRole("link", { name: /home/i }).length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByRole("link", { name: /albums/i }).length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByRole("link", { name: /search/i }).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByRole("link", { name: /import/i }).length).toBeGreaterThanOrEqual(1)
   })
 
   it("applies active class to current route link", () => {
