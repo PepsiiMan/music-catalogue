@@ -3,7 +3,8 @@ import { motion } from "motion/react"
 import { useToast } from "../components/Toast"
 import { detectAlbums, ImportNoAlbumsError } from "../api/import"
 import { PROCESSING_MESSAGES } from "../config/import"
-import type { DetectionResult } from "../types"
+import { toCsv, toJson, downloadBlob } from "../utils/export"
+import type { DetectionResult, DetectedAlbum } from "../types"
 
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"]
 const MAX_FILE_SIZE = 30 * 1024 * 1024
@@ -58,6 +59,30 @@ export function ImportPage() {
 
   const handleEditCancel = () => {
     setEditing(null)
+  }
+
+  const handleClear = () => {
+    setResult(null)
+    setEdits({})
+    setEditing(null)
+    setPhase("idle")
+  }
+
+  const getExportAlbums = (): DetectedAlbum[] => {
+    if (!result) return []
+    return result.albums.map((album, index) => ({
+      ...album,
+      ...(edits[index]?.title !== undefined && { title: edits[index].title! }),
+      ...(edits[index]?.artist !== undefined && { artist: edits[index].artist! }),
+    }))
+  }
+
+  const handleExportCsv = () => {
+    downloadBlob(toCsv(getExportAlbums()), "detections.csv", "text/csv")
+  }
+
+  const handleExportJson = () => {
+    downloadBlob(toJson(getExportAlbums()), "detections.json", "application/json")
   }
 
   const validateFile = (file: File): boolean => {
@@ -175,6 +200,29 @@ export function ImportPage() {
                   )}
                 </div>
               ))}
+            </div>
+            <div className="flex justify-center gap-4 mt-8">
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white"
+              >
+                Export CSV
+              </button>
+              <button
+                type="button"
+                onClick={handleExportJson}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white"
+              >
+                Export JSON
+              </button>
+              <button
+                type="button"
+                onClick={handleClear}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white"
+              >
+                Clear
+              </button>
             </div>
           </div>
         )}

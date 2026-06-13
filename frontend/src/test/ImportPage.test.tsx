@@ -289,6 +289,131 @@ describe("ImportPage", () => {
     expect(screen.queryByText("OK Computer")).not.toBeInTheDocument()
   })
 
+  it("clear button resets page to idle/upload state", async () => {
+    const { detectAlbums } = await import("../api/import")
+    const result: DetectionResult = {
+      albums: [{ title: "OK Computer", artist: "Radiohead", row: 0, col: 1, source_frame: 42 }],
+      total_frames_processed: 100,
+      frames_with_detections: 1,
+    }
+    vi.mocked(detectAlbums).mockResolvedValue(result)
+
+    render(<ImportPage />, { wrapper: Wrapper })
+    const input = screen.getByTestId("file-input")
+    const file = new File(["video"], "clip.mp4", { type: "video/mp4" })
+
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByTestId("results-view")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: /clear/i }))
+
+    expect(screen.getByTestId("upload-zone")).toBeInTheDocument()
+    expect(screen.queryByTestId("results-view")).not.toBeInTheDocument()
+  })
+
+  it("export CSV button triggers download with correct format", async () => {
+    const { detectAlbums } = await import("../api/import")
+    const result: DetectionResult = {
+      albums: [
+        { title: "OK Computer", artist: "Radiohead", row: 0, col: 1, source_frame: 42 },
+        { title: "In Rainbows", artist: "Radiohead", row: 1, col: 0, source_frame: 42 },
+      ],
+      total_frames_processed: 100,
+      frames_with_detections: 1,
+    }
+    vi.mocked(detectAlbums).mockResolvedValue(result)
+
+    const createObjectURL = vi.fn(() => "blob:mock")
+    const revokeObjectURL = vi.fn()
+    vi.stubGlobal("URL", { createObjectURL, revokeObjectURL })
+
+    render(<ImportPage />, { wrapper: Wrapper })
+    const input = screen.getByTestId("file-input")
+    const file = new File(["video"], "clip.mp4", { type: "video/mp4" })
+
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByTestId("results-view")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: /export csv/i }))
+
+    expect(createObjectURL).toHaveBeenCalledOnce()
+    const blob = createObjectURL.mock.calls[0][0] as Blob
+    expect(blob.type).toBe("text/csv")
+  })
+
+  it("export JSON button triggers download with correct format", async () => {
+    const { detectAlbums } = await import("../api/import")
+    const result: DetectionResult = {
+      albums: [
+        { title: "OK Computer", artist: "Radiohead", row: 0, col: 1, source_frame: 42 },
+        { title: "In Rainbows", artist: "Radiohead", row: 1, col: 0, source_frame: 42 },
+      ],
+      total_frames_processed: 100,
+      frames_with_detections: 1,
+    }
+    vi.mocked(detectAlbums).mockResolvedValue(result)
+
+    const createObjectURL = vi.fn(() => "blob:mock")
+    const revokeObjectURL = vi.fn()
+    vi.stubGlobal("URL", { createObjectURL, revokeObjectURL })
+
+    render(<ImportPage />, { wrapper: Wrapper })
+    const input = screen.getByTestId("file-input")
+    const file = new File(["video"], "clip.mp4", { type: "video/mp4" })
+
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByTestId("results-view")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: /export json/i }))
+
+    expect(createObjectURL).toHaveBeenCalledOnce()
+    const blob = createObjectURL.mock.calls[0][0] as Blob
+    expect(blob.type).toBe("application/json")
+  })
+
+  it("switching between CSV and JSON exports preserves edits", async () => {
+    const { detectAlbums } = await import("../api/import")
+    const result: DetectionResult = {
+      albums: [
+        { title: "OK Computer", artist: "Radiohead", row: 0, col: 1, source_frame: 42 },
+      ],
+      total_frames_processed: 100,
+      frames_with_detections: 1,
+    }
+    vi.mocked(detectAlbums).mockResolvedValue(result)
+
+    const createObjectURL = vi.fn(() => "blob:mock")
+    const revokeObjectURL = vi.fn()
+    vi.stubGlobal("URL", { createObjectURL, revokeObjectURL })
+
+    render(<ImportPage />, { wrapper: Wrapper })
+    const input = screen.getByTestId("file-input")
+    const file = new File(["video"], "clip.mp4", { type: "video/mp4" })
+
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByTestId("results-view")).toBeInTheDocument()
+
+    const titleElement = screen.getByText("OK Computer")
+    fireEvent.click(titleElement)
+    const editInput = screen.getByDisplayValue("OK Computer")
+    fireEvent.change(editInput, { target: { value: "Kid A" } })
+    fireEvent.keyDown(editInput, { key: "Enter" })
+
+    fireEvent.click(screen.getByRole("button", { name: /export csv/i }))
+    const csvBlob = createObjectURL.mock.calls[0][0] as Blob
+    expect(csvBlob.type).toBe("text/csv")
+
+    fireEvent.click(screen.getByRole("button", { name: /export json/i }))
+    const jsonBlob = createObjectURL.mock.calls[1][0] as Blob
+    expect(jsonBlob.type).toBe("application/json")
+
+    expect(screen.getByText("Kid A")).toBeInTheDocument()
+  })
+
   it("cancels inline edit on Escape and reverts to original text", async () => {
     const { detectAlbums } = await import("../api/import")
     const result: DetectionResult = {
