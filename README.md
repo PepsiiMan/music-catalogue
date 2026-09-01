@@ -8,7 +8,7 @@ I'm hosting the app on a VPS, reachable through my [meme domain](batates.org) (n
 ## What I'm using
 Besides getting a useful application, I'm trying to attain new skills to expand my development repertoire with the following:
 - Frontend: React + Typescript
-- Backend: Go + Chi to fetch music metadata
+- Backend: TypeScript on Node.js (Hono) to fetch music metadata
 - Database: SQLite through OPFS using `wa-sqlite`
   - After much deliberation, I decided I did not want to support account creation/management, and instead go for a local-first approach where each user's collection lives on their machine.
 
