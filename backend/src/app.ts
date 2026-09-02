@@ -20,13 +20,15 @@ export function createApp(rateLimiter?: RateLimiter) {
   })
 
   app.use(logger())
-  app.use(timeout(30_000))
   app.use(compress())
   app.use(throttleBacklog(5, 30_000))
 
   app.get('/health', (c) => c.body(null, 200))
 
   const search = new Hono()
+  // The 30s timeout covers search only: video detection can legitimately
+  // take minutes, so /api/import is bounded by the client's 300s instead.
+  search.use(timeout(30_000))
   search.use(requestSize(1 << 20))
   search.route('/', musicBrainzRoutes(new MusicBrainzClient(rateLimiter ?? new RateLimiter(1000))))
   search.route('/', coverArtArchiveRoutes())

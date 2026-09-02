@@ -6,12 +6,12 @@ export function albumDetectorRoutes(client = new AlbumDetectorClient()) {
 
   routes.post('/detect', async (c) => {
     const contentType = c.req.header('content-type') ?? ''
-    const body = c.req.raw.body
-    if (!contentType.startsWith('multipart/form-data') || body === null) {
+    if (!contentType.startsWith('multipart/form-data')) {
       return c.body(null, 400)
     }
 
     try {
+      const body = await c.req.arrayBuffer()
       const upstream = await client.detect(body, contentType)
       return new Response(upstream.body, {
         status: 200,

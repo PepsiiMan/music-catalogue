@@ -20,17 +20,22 @@ export class AlbumDetectorClient {
   }
 
   /**
-   * Streams the incoming multipart body through to album-detector unchanged.
+   * Buffers the incoming multipart body and forwards it to album-detector
+   * with an explicit Content-Length. Streaming (duplex: 'half') was tried
+   * and reverted: under @hono/node-server the forwarded body stream stalls
+   * and the upstream request never completes.
    * Upstream non-200 responses surface as DetectionError with the raw body.
    */
-  async detect(body: ReadableStream, contentType: string): Promise<Response> {
+  async detect(body: ArrayBuffer, contentType: string): Promise<Response> {
     const response = await fetch(`${this.baseUrl}/detect`, {
       method: 'POST',
-      headers: { 'Content-Type': contentType },
+      headers: {
+        'Content-Type': contentType,
+        'Content-Length': String(body.byteLength),
+      },
       body,
-      duplex: 'half',
       signal: AbortSignal.timeout(this.timeoutMs),
-    } as RequestInit)
+    })
 
     if (!response.ok) {
       throw new DetectionError(response.status, await response.text())
