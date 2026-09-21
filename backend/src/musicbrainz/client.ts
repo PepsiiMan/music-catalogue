@@ -1,5 +1,6 @@
 import { config } from '../config.js'
-import type { MusicBrainzResponse, ReleaseDTO } from './models.js'
+import type { MusicBrainzResponse, ReleaseDTO, ScoredRelease } from './models.js'
+import { toRelease } from './models.js'
 import { sanitizeLucene } from './sanitizeLucene.js'
 
 const BASE_URL = 'https://musicbrainz.org/ws/2'
@@ -51,6 +52,12 @@ export class MusicBrainzClient {
   }
 
   async searchAlbums(title: string, artist: string, limit: number): Promise<ReleaseDTO[]> {
+    const scored = await this.searchScoredAlbums(title, artist, limit)
+    return scored.map(toRelease)
+  }
+
+  /** Like searchAlbums but keeps MusicBrainz's relevance score for ranking matches. */
+  async searchScoredAlbums(title: string, artist: string, limit: number): Promise<ScoredRelease[]> {
     await this.limiter.acquire()
 
     const parts: string[] = []
@@ -74,7 +81,7 @@ export class MusicBrainzClient {
 
     const result = (await response.json()) as MusicBrainzResponse
 
-    const releases: ReleaseDTO[] = []
+    const releases: ScoredRelease[] = []
     for (const release of result.releases) {
       const artistCredit = release['artist-credit'][0]
       if (!artistCredit) continue
@@ -83,6 +90,7 @@ export class MusicBrainzClient {
         artist: artistCredit.artist.name,
         date: release.date,
         mbid: release.id,
+        score: release.score ?? 0,
       })
     }
     return releases

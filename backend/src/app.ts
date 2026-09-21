@@ -9,6 +9,7 @@ import { musicBrainzRoutes } from './musicbrainz/handler.js'
 import { MusicBrainzClient, RateLimiter } from './musicbrainz/client.js'
 import { coverArtArchiveRoutes } from './coverartarchive/handler.js'
 import { albumDetectorRoutes } from './albumdetector/handler.js'
+import { importMatchRoutes } from './importmatch/handler.js'
 
 export function createApp(rateLimiter?: RateLimiter) {
   const app = new Hono()
@@ -25,18 +26,21 @@ export function createApp(rateLimiter?: RateLimiter) {
 
   app.get('/health', (c) => c.body(null, 200))
 
+  const musicBrainz = new MusicBrainzClient(rateLimiter ?? new RateLimiter(1000))
+
   const search = new Hono()
   // The 30s timeout covers search only: video detection can legitimately
   // take minutes, so /api/import is bounded by the client's 300s instead.
   search.use(timeout(30_000))
   search.use(requestSize(1 << 20))
-  search.route('/', musicBrainzRoutes(new MusicBrainzClient(rateLimiter ?? new RateLimiter(1000))))
+  search.route('/', musicBrainzRoutes(musicBrainz))
   search.route('/', coverArtArchiveRoutes())
   app.route('/api/search', search)
 
   const importRoutes = new Hono()
   importRoutes.use(requestSize(30 << 20))
   importRoutes.route('/', albumDetectorRoutes())
+  importRoutes.route('/', importMatchRoutes(musicBrainz))
   app.route('/api/import', importRoutes)
 
   return app

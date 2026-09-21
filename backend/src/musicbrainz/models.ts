@@ -6,6 +6,15 @@ export interface ReleaseDTO {
   date: string
 }
 
+/** A ReleaseDTO plus MusicBrainz's relevance score, used to rank match alternatives. */
+export interface ScoredRelease extends ReleaseDTO {
+  score: number
+}
+
+export function toRelease(scored: ScoredRelease): ReleaseDTO {
+  return { mbid: scored.mbid, title: scored.title, artist: scored.artist, date: scored.date }
+}
+
 /** Raw MusicBrainz API shapes (subset, as used by the Go backend). */
 export interface MusicBrainzArtist {
   id: string
@@ -26,6 +35,8 @@ export interface MusicBrainzRelease {
   disambiguation: string
   'artist-credit': MusicBrainzArtistCredit[]
   date: string
+  /** Relevance score (0-100); called "ext:score" in the XML API. */
+  score: number
 }
 
 export interface MusicBrainzResponse {
