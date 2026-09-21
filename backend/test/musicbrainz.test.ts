@@ -54,7 +54,36 @@ describe('GET /api/search/albums', () => {
       artist: 'My Dead Girlfriend',
       date: '2013-02-14',
     })
-    expect(sawQuery).toBe('title:"Yellow Loveless" AND artist:"My Dead Girlfriend"')
+    expect(sawQuery).toBe('title:Yellow\\ Loveless~1 AND artist:My\\ Dead\\ Girlfriend~1')
+  })
+
+  it('sanitises Lucene reserved characters before interpolating into the query', async () => {
+    let sawQuery = ''
+    server.use(
+      http.get(`${BASE}/release/`, ({ request }) => {
+        const url = new URL(request.url)
+        sawQuery = url.searchParams.get('query') ?? ''
+        const body: MusicBrainzResponse = {
+          created: new Date().toISOString(),
+          count: 0,
+          offset: 0,
+          releases: [],
+        }
+        return HttpResponse.json(body)
+      }),
+    )
+
+    const res = await app.request(
+      'http://localhost/api/search/albums?title=' +
+        encodeURIComponent('Loves"ong \\') +
+        '&artist=' +
+        encodeURIComponent('(foo) +bar -baz [x] ^y:z *a/b &&c'),
+    )
+
+    expect(res.status).toBe(200)
+    expect(sawQuery).toBe(
+      'title:Loves\\"ong\\ \\\\~1 AND artist:\\(foo\\)\\ \\+bar\\ \\-baz\\ \\[x\\]\\ \\^y\\:z\\ \\*a\\/b\\ \\&\\&c~1',
+    )
   })
 
   it('skips releases with an empty artist-credit instead of failing', async () => {
