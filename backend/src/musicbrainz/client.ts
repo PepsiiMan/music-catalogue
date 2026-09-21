@@ -1,7 +1,9 @@
 import { config } from '../config.js'
 import type { MusicBrainzResponse, ReleaseDTO } from './models.js'
+import { sanitizeLucene } from './sanitizeLucene.js'
 
 const BASE_URL = 'https://musicbrainz.org/ws/2'
+const FUZZY_SUFFIX = '~1'
 
 /** Global token-bucket rate limiter: one request per interval, matching the Go client's ticker. */
 export class RateLimiter {
@@ -52,8 +54,8 @@ export class MusicBrainzClient {
     await this.limiter.acquire()
 
     const parts: string[] = []
-    if (title !== '') parts.push(`title:"${title}"`)
-    if (artist !== '') parts.push(`artist:"${artist}"`)
+    if (title !== '') parts.push(`title:${sanitizeLucene(title)}${FUZZY_SUFFIX}`)
+    if (artist !== '') parts.push(`artist:${sanitizeLucene(artist)}${FUZZY_SUFFIX}`)
 
     const params = new URLSearchParams({
       query: parts.join(' AND '),
