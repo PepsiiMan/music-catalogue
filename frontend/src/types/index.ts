@@ -29,6 +29,22 @@ export interface DetectedAlbum {
   source_frame: number
 }
 
+export interface AlbumQuery {
+  title: string
+  artist: string
+}
+
+export interface Match {
+  input: AlbumQuery
+  best: SearchResult | null
+  alternatives: SearchResult[]
+  error?: string
+}
+
+export interface MatchResponse {
+  matches: Match[]
+}
+
 export interface DetectionResult {
   albums: DetectedAlbum[]
   total_frames_processed: number
