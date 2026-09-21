@@ -5,7 +5,7 @@ import { useToast } from "../components/Toast"
 import { detectAlbums, ImportNoAlbumsError } from "../api/import"
 import { matchAlbums } from "../api/importmatch"
 import { createAlbum, deleteAlbum } from "../db/albums"
-import { MatchCard, type RowDecision } from "../components/MatchCard"
+import { MatchCard, resolveChosen, type RowDecision } from "../components/MatchCard"
 import { PROCESSING_MESSAGES, MATCHING_MESSAGES, COMMITTING_MESSAGES } from "../config/import"
 import { toCsv, toJson, downloadBlob } from "../utils/export"
 import type { Album, AlbumQuery, DetectionResult, DetectedAlbum, Match } from "../types"
@@ -125,7 +125,15 @@ export function ImportPage() {
     try {
       const response = await matchAlbums(queries)
       setMatches(response.matches)
-      setDecisions({})
+      // "Cancel" on the confirming view keeps the user's dismisses; re-apply them
+      // to the fresh match rows (rows map 1:1 onto the detection run's order).
+      setDecisions(prev => {
+        const next: Record<number, RowDecision> = {}
+        response.matches.forEach((_, index) => {
+          if (prev[index]?.action === "dismiss") next[index] = { action: "dismiss" }
+        })
+        return next
+      })
       setOpenAlternatives(null)
       setPhase("confirming")
     } catch (error) {
@@ -144,8 +152,8 @@ export function ImportPage() {
     matches.flatMap((match, index): Omit<Album, "id">[] => {
       const decision = getDecision(index)
       if (decision.action === "dismiss") return []
-      if (match.best) {
-        const release = decision.chosen ?? match.best
+      const release = resolveChosen(match, decision)
+      if (release) {
         return [{ title: release.title, artist: release.artist, release: release.date || null, mbid: release.mbid }]
       }
       if (decision.addWithoutMbid) {

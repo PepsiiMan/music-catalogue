@@ -9,6 +9,10 @@ export interface RowDecision {
   addWithoutMbid?: boolean
 }
 
+export function resolveChosen(match: Match, decision: RowDecision): SearchResult | null {
+  return decision.chosen ?? match.best
+}
+
 interface Props {
   match: Match
   decision: RowDecision
@@ -18,7 +22,7 @@ interface Props {
 }
 
 export function MatchCard({ match, decision, alternativesOpen, onToggleAlternatives, onDecide }: Props) {
-  const release = decision.chosen ?? match.best
+  const release = resolveChosen(match, decision)
   const dismissed = decision.action === "dismiss"
   const unmatched = !match.best
 

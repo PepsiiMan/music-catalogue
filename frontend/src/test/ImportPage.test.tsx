@@ -733,6 +733,30 @@ describe("ImportPage", () => {
       expect(screen.queryByTestId("confirming-view")).not.toBeInTheDocument()
       expect(screen.getByText("OK Computer")).toBeInTheDocument()
     })
+
+    it("preserves dismisses when the user cancels and re-matches", async () => {
+      stubCreatedAlbums([1])
+      await renderConfirming()
+
+      const row0 = screen.getByTestId("confirm-row-0")
+      fireEvent.click(within(row0).getByRole("button", { name: /dismiss/i }))
+
+      fireEvent.click(screen.getByRole("button", { name: /^cancel$/i }))
+      await screen.findByTestId("results-view")
+
+      vi.mocked(matchAlbums).mockResolvedValue({ matches: twoMatches() })
+      fireEvent.click(screen.getByRole("button", { name: /add all to collection/i }))
+      await screen.findByTestId("confirming-view")
+
+      const row0Again = screen.getByTestId("confirm-row-0")
+      expect(within(row0Again).getByRole("button", { name: /restore/i })).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole("button", { name: /commit/i }))
+      await screen.findByTestId("done-view")
+
+      expect(createAlbum).toHaveBeenCalledTimes(1)
+      expect(createAlbum).toHaveBeenCalledWith(expect.objectContaining({ title: "In Rainbows" }))
+    })
   })
 
   describe("committing phase", () => {
