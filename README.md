@@ -8,12 +8,10 @@ I'm hosting the app on a VPS, reachable through my [meme domain](batates.org) (n
 - `\backend` built with Go + Chi. It retrieves metadata (using MusicBrainz, and Cover Art Archive), as well as coordinating additional services.
 - `\services` contains additional services to add new features and functionality to my app, which would then talk to the backend.
 
-Caddy serves the frontend, and proxies the backend and services. Everything runs together through docker files.
-
-## Some details
-Besides getting a useful application, I'm trying out new technologies to expand my development repertoire. Some things I've learned/still learning:
-- Frontend: React, Typescript, Tailwindcss, and Vite for local dev.
-- Backend: Go and Chi due to its familiar feel with respect to the Go standard library.
+## What I'm using
+Besides getting a useful application, I'm trying to attain new skills to expand my development repertoire with the following:
+- Frontend: React + Typescript
+- Backend: TypeScript on Node.js (Hono) to fetch music metadata
 - Database: SQLite through OPFS using `wa-sqlite`
   - I decided I did not want to support account creation/management, and instead go for a local-first approach where each user's collection lives on their machine.
 - Additional services are planned to be FastAPI instances, due to its ease of use and popularity (+ I'm pretty familiar with Python already).
