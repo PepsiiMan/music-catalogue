@@ -3,11 +3,6 @@ As an avid listener of music, one of my biggest pain points is keeping track of 
 
 I'm hosting the app on a VPS, reachable through my [meme domain](batates.org) (not always online)
 
-# Architecture
-- `\frontend` built with React + Typescript.
-- `\backend` built with Go + Chi. It retrieves metadata (using MusicBrainz, and Cover Art Archive), as well as coordinating additional services.
-- `\services` contains additional services to add new features and functionality to my app, which would then talk to the backend.
-
 ## What I'm using
 Besides getting a useful application, I'm trying to attain new skills to expand my development repertoire with the following:
 - Frontend: React + Typescript
